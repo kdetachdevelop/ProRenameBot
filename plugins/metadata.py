@@ -36,23 +36,22 @@ async def query_metadata(bot: Client, query: CallbackQuery):
 
         if bool(eval(_bool)):
             await db.set_metadata(query.from_user.id, bool_meta=False)
-            await query.message.edit(f"Your Current Metadata:-\n\n➜ `{user_metadata}` ", reply_markup=InlineKeyboardMarkup(OFF))
-
         else:
             await db.set_metadata(query.from_user.id, bool_meta=True)
-            await query.message.edit(f"Your Current Metadata:-\n\n➜ `{user_metadata}` ", reply_markup=InlineKeyboardMarkup(ON))
 
-    elif data == 'cutom_metadata':
+        await query.message.edit(f"Your Current Metadata:-\n\n➜ `{user_metadata}` ",
+                                 reply_markup=InlineKeyboardMarkup(ON if bool(eval(_bool)) else OFF))
+
+    elif data == 'custom_metadata':
         await query.message.delete()
         try:
-            try:
-                metadata = await bot.ask(text=Txt.SEND_METADATA, chat_id=query.from_user.id, filters=filters.text, timeout=30, disable_web_page_preview=True)
-            except ListenerTimeout:
-                await query.message.reply_text("⚠️ Error!!\n\n**Request timed out.**\nRestart by using /metadata", reply_to_message_id=query.message.id)
-                return
-            print(metadata.text)
-            ms = await query.message.reply_text("**Please Wait...**", reply_to_message_id=metadata.id)
+            metadata = await bot.ask(text=Txt.SEND_METADATA, chat_id=query.from_user.id,
+                                     filters=filters.text, timeout=30, disable_web_page_preview=True)
             await db.set_metadata_code(query.from_user.id, metadata_code=metadata.text)
-            await ms.edit("**Your Metadta Code Set Successfully ✅**")
+            await query.message.reply_text("**Your Metadata Code Set Successfully ✅**")
+        except ListenerTimeout:
+            await query.message.reply_text("⚠️ Error!!\n\n**Request timed out.**\nRestart by using /metadata",
+                                           reply_to_message_id=query.message.id)
         except Exception as e:
             print(e)
+            await query.message.reply_text("⚠️ An error occurred while setting custom metadata. Please try again later.")
